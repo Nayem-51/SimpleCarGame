@@ -1,4 +1,4 @@
-# Project: Simple Car Game
+# Project: Car Simulation Game
 
 ## Team Information
 - *Group Name:* Team Fantos
