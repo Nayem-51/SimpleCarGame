@@ -1,40 +1,41 @@
+//project-150-car simulation game :
 #include<iostream>
+#include<vector>
 #include<conio.h>
-#include<dos.h>
 #include<windows.h>
 #include<time.h>
+#include<fstream>
+#include<algorithm>
 
 // Define constants for screen dimensions
-#define SCREEN_WIDTH 90  // Total width of the screen
-#define SCREEN_HEIGHT 29 // Total height of the screen
+#define SCREEN_WIDTH 100  // Total width of the screen
+#define SCREEN_HEIGHT 30 // Total height of the screen
 #define WIN_WIDTH 70     // Width of the game window within the screen
+
 
 using namespace std;
 
-// Global variables
 HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 COORD CursorPosition;
 
-// Arrays to store enemy positions and flags
-int enemyY[3];  // Vertical positions of the three enemies
-int enemyX[3];  // Horizontal positions of the three enemies
-int enemyFlag[3];  // Flags for each enemy (purpose not yet clear)
-
-char car[4][4] = { ' ','+','+',' ', // Top row of the car
-                  '+','+','+','+',        // Middle rows of the car
+int enemyY[3];//represent the x and y position of the enemy
+int enemyX[3];
+int enemyFlag[3];//activation of the enemy and display
+char car[4][4] = { ' ','+','+',' ',   // Top row of the car
+                  '+','+','+','+',
                   ' ','+','+',' ',
-                  '+','+','+','+'};         // Bottom row of the car
+                  '+','+','+','+'};    // Bottom row of the car
+
 int carpos = WIN_WIDTH/2;
 int score = 0;
+string playerName;
 
-// Function to set the cursor position
-void gotoxy(int x, int y){
+void gotoxy(int x, int y) {
     CursorPosition.X = x;
     CursorPosition.Y = y;
     SetConsoleCursorPosition(console, CursorPosition);
 }
 
-// Function to set cursor visibility and size
 void setcursor(bool visible, DWORD size) {
     if (size == 0)
         size = 50;
@@ -42,163 +43,184 @@ void setcursor(bool visible, DWORD size) {
     CONSOLE_CURSOR_INFO lpCursor;
     lpCursor.bVisible = visible;
     lpCursor.dwSize = size;
-    SetConsoleCursorInfo(console, &lpCursor);
+
+    SetConsoleCursorInfo(console, &lpCursor);//api
 }
 
-// Function to draw the game border
-void drawBorder(){
-    for(int i=0; i<SCREEN_HEIGHT; i++){
-        for(int j=0; j<18; j++){                           // Draw the left and right borders using 18 asterisks each
-            gotoxy(0+j, i);                                    // Move the cursor to the current position on the left border
-            cout << "*";
-            gotoxy(WIN_WIDTH-j, i);
-            cout << "*";
+void drawBorder() {
+    for (int i = 0; i < SCREEN_HEIGHT; i++) {
+        for (int j = 0; j < 18; j++) {//draw the left and right border
+            gotoxy(0 + j, i);//set the cursor to the current column and row
+            cout << "|";
+            gotoxy(WIN_WIDTH - j, i);
+            cout << "|";
         }
     }
-    for(int i=0; i<SCREEN_HEIGHT; i++){            // Iterate through each row again to draw a vertical line at the right edge
+    for (int i = 0; i < SCREEN_HEIGHT; i++) {
         gotoxy(SCREEN_WIDTH, i);
-        cout << "*";
+        cout << "|";
     }
 }
 
-// Function to generate enemy at a specific index
-void genEnemy(int ind){
-    enemyX[ind] = 17 + rand() % (33);       // Range from 17 to 50
+void genEnemy(int ind) {
+    enemyX[ind] = 17 + rand() % (33);
 }
 
-// Function to draw an enemy at a specified index if its flag is active
 void drawEnemy(int ind) {
- // Check if the enemy's flag is true (indicating it should be drawn)
- if (enemyFlag[ind] == true) {
-   // Draw the enemy's shape using character blocks
-   gotoxy(enemyX[ind], enemyY[ind]);  // Move cursor to top-left position
-   cout << "####";  // Print the top row of the enemy
-   gotoxy(enemyX[ind], enemyY[ind] + 1);  // Move down one row
-   cout << " ## ";  // Print the middle row
-   gotoxy(enemyX[ind], enemyY[ind] + 2);  // Move down another row
-   cout << "####";  // Print the bottom row
-   gotoxy(enemyX[ind], enemyY[ind] + 3);  // Move down one more row
-   cout << " ## ";  // Print the bottom protrusions
- }
+    if (enemyFlag[ind] == true) {
+        gotoxy(enemyX[ind], enemyY[ind]); cout << "****";
+        gotoxy(enemyX[ind], enemyY[ind] + 1); cout << " ** ";
+        gotoxy(enemyX[ind], enemyY[ind] + 2); cout << "****";
+        gotoxy(enemyX[ind], enemyY[ind] + 3); cout << " ** ";
+    }
 }
 
-
-void eraseEnemy(int ind){
-	if( enemyFlag[ind]== true ){
-		gotoxy(enemyX[ind] , enemyY[ind]); 		    cout<<"    ";
-		gotoxy(enemyX[ind] , enemyY[ind]+1);		cout<<"    ";
-		gotoxy(enemyX[ind] , enemyY[ind]+2);		cout<<"    ";
-		gotoxy(enemyX[ind] , enemyY[ind]+3);		cout<<"    ";
-		gotoxy(WIN_WIDTH -40, 0); cout<<"     ||     ";
-	//	gotoxy(WIN_WIDTH -40, 5); cout<<"            ";
-		gotoxy(WIN_WIDTH -40, 5); cout<<"     ||     ";
-	//	gotoxy(WIN_WIDTH -40, 10); cout<<"            ";
-		gotoxy(WIN_WIDTH -40, 10); cout<<"     ||     ";
-	//	gotoxy(WIN_WIDTH -40, 15); cout<<"             ";
-		gotoxy(WIN_WIDTH -40, 15); cout<<"     ||     ";
-	//	gotoxy(WIN_WIDTH -40, 20); cout<<"             ";
-		gotoxy(WIN_WIDTH -40, 20); cout<<"     ||     ";
-	//	gotoxy(WIN_WIDTH -40, 25); cout<<"             ";
-		gotoxy(WIN_WIDTH -40, 25); cout<<"     ||     ";
-	//	gotoxy(WIN_WIDTH -40, 30); cout<<"             ";
-	}
+void eraseEnemy(int ind) {
+    if (enemyFlag[ind] == true) {
+        gotoxy(enemyX[ind], enemyY[ind]); cout << "    ";
+        gotoxy(enemyX[ind], enemyY[ind] + 1); cout << "    ";
+        gotoxy(enemyX[ind], enemyY[ind] + 2); cout << "    ";
+        gotoxy(enemyX[ind], enemyY[ind] + 3); cout << "    ";
+    }
 }
 
-// Function to reset an enemy at a specified index
 void resetEnemy(int ind) {
-  // Erase the enemy from its current position
-  eraseEnemy(ind);
-
-  // Move the enemy back to the top of the screen
-  enemyY[ind] = 1;
-
-  // Generate a new random horizontal position for the enemy
-  genEnemy(ind);
+    eraseEnemy(ind);
+    enemyY[ind] = 1;
+    genEnemy(ind);
 }
 
-// Function to draw the car on the screen
 void drawCar() {
-  // Iterate through each row and column of the car's visual representation
-  for (int i = 0; i < 4; i++) {
-    for (int j = 0; j < 4; j++) {
-      // Move the cursor to the appropriate position on the screen
-      gotoxy(j + carpos, i + 22);
-      // Print the character at the current position in the car array
-      cout << car[i][j];
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            gotoxy(j + carpos, i + 22); cout << car[i][j];
+        }
     }
-  }
 }
 
-// Function to erase the car from the screen
-void eraseCar() {
-  // Iterate through each row and column of the car's previous position
-  for (int i = 0; i < 4; i++) {
-    for (int j = 0; j < 4; j++) {
-      // Move the cursor to the appropriate position
-      gotoxy(j + carpos, i + 22);
-      // Print spaces to overwrite the car's visual representation
-      cout << " ";
+void eraseCar() {//for updating we should erase the car
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            gotoxy(j + carpos, i + 22); cout << " ";
+        }
     }
-  }
 }
 
-// Function to check for collision between the car and an enemy
 int collision() {
-  // Check if the bottom of the first enemy is close enough to the car's top
-  if (enemyY[0] + 4 >= 23) {
-    // Check if the enemy's horizontal position overlaps with the car's width
-    if (enemyX[0] + 4 - carpos >= 0 && enemyX[0] + 4 - carpos < 9) {
-      // Collision detected!
-      return 1;
+    if (enemyY[0] + 4 >= 23) {
+        if (enemyX[0] + 4 - carpos >= 0 && enemyX[0] + 4 - carpos < 9) {//horizonatal position of the enemy align with the current carposition
+            return 1;
+        }
     }
-  }
-  // No collision detected
-  return 0;
+    return 0;
 }
 
-// Function to display the game over message
+void saveScore(int score) {//changing or updating the data
+    ofstream scoreFile("scores.txt", ios::app);//declare output file stream namescoeFile and topen a file name score.txt in append mode
+
+    if (scoreFile.is_open()) {
+        scoreFile << playerName << " " << score << endl;
+        scoreFile.close();
+    }
+}
+
+void displayTopScores() {
+    system("cls");
+    cout << "\t\t----------------------------" << endl;
+    cout << "\t\t------ Top 10 Scores --------" << endl;
+    cout << "\t\t----------------------------" << endl;
+
+    ifstream scoreFile("scores.txt");//declare inuput file stream name scorefile and read/open the score.txt file
+    if (scoreFile.is_open()) {
+        vector<pair<string, int>> players;//create vector pair for store player name and score
+        string name;
+        int s;
+        while (scoreFile >> name >> s) {//read data from the file
+            players.push_back({name, s});
+        }
+
+        players.push_back({playerName, score});//adding new element in the vector
+        sort(players.begin(), players.end(), [](const auto &a, const auto &b) {
+            return a.second > b.second;
+        });
+
+        int count = min(10, static_cast<int>(players.size()));//display how many variable will display
+        for (int i = 0; i < count; ++i) {
+            cout << "\t\t" << players[i].first << ": " << players[i].second << endl;
+        }
+
+        scoreFile.close();
+    } else {
+        cout << "Unable to open scores file." << endl;
+    }
+
+    cout << "\n\t\tPress any Key to go back to menu.";
+    getch();
+}
+
+void displayPlayerScore() {
+    system("cls");
+    cout << "\t\t----------------------------" << endl;
+    cout << "\t\t------ Player Score --------" << endl;
+    cout << "\t\t----------------------------" << endl;
+    cout << "\t\tPlayer Name: " << playerName << endl;
+    cout << "\t\tYour Score: " << score << endl;
+    cout << "\n\t\tPress any Key to go back to menu.";
+    getch();
+}
+
+void readPlayerData(string playerName, int &score) {//read player data from score.txt file and it print to the console
+    ifstream scoreFile("scores.txt");
+
+    if (scoreFile.is_open()) {
+        while (scoreFile >> playerName >> score) {//loop for read the payer data fromscorefile
+            cout << "\t\t" << playerName << ": " << score << endl;
+        }
+
+        scoreFile.close();
+    } else {
+        cout << "Unable to open scores file." << endl;
+    }
+}
+
 void gameover() {
-  // Clear the screen
-  system("cls");
+    cout << endl;
+    cout << "\t\t----------------------------" << endl;
+    cout << "\t\t--------- Game Over --------" << endl;
+    cout << "\t\t----------------------------" << endl;
+    cout << "\t\tPlayer Name: " << playerName << endl;
+    cout << "\t\tYour Score: " << score << endl;
 
-  // Print the game over message with a centered title and border
-  cout << endl;
-  cout << "\t\t----------------------------" << endl;
-  cout << "\t\t--------- Game Over --------" << endl;
-  cout << "\t\t----------------------------" << endl;
-  cout << "\t\tPress any Key to go back to menu.";
-
-  // Wait for a key press to continue
-  getch();
+    saveScore(score);
+    displayPlayerScore();
+    system("cls");
 }
 
-
-
-// Function to update and display the score
-void updateScore(){
+void updateScore() {//current score
     gotoxy(WIN_WIDTH + 7, 5);
     cout << "Score: " << score << endl;
 }
 
-// Function to display game instructions
-void instructions(){
-    system("cls");
+void instructions() {
+    system("cls");//console command to clear the console screen
     cout << "Instructions";
     cout << "\n-----------------";
     cout << "\n Avoid car by moving left or right.";
     cout << "\n\n Press 'Arrow Keys' to move the Car";
     cout << "\n\n Press 'escape' to Exit";
     cout << "\n\n Press any Key to go back to the menu";
-    getch();
+    getch();//use to keypress
 }
 
-// Function to start the game
-void play(){
-    carpos = -1 + WIN_WIDTH/2;
+void play() {
+    cout << "Enter your name: ";
+    cin >> playerName;
+
+    carpos = -1 + WIN_WIDTH / 2;
     score = 0;
     enemyFlag[0] = 1;
     enemyFlag[1] = 0;
-    enemyY[0] = enemyY[1] = 1;
+    enemyY[0] = enemyY[1] = 1;//both starts with the same position
 
     system("cls");
     drawBorder();
@@ -206,43 +228,30 @@ void play(){
     genEnemy(0);
     genEnemy(1);
 
-    gotoxy(WIN_WIDTH + 7, 2);
-    cout << "Car Game";
-    gotoxy(WIN_WIDTH + 6, 4);
-    cout << "----------";
-    gotoxy(WIN_WIDTH + 6, 6);
-    cout << "----------";
-    gotoxy(WIN_WIDTH + 7, 12);
-    cout << "Control ";
-    gotoxy(WIN_WIDTH + 7, 13);
-    cout << "-------- ";
-    gotoxy(WIN_WIDTH + 2, 14);
-    cout << "A Key - Left";
-    gotoxy(WIN_WIDTH + 2, 15);
-    cout << "D Key - Left";
-    gotoxy(WIN_WIDTH + 2, 15);
-    cout << "Left Arrow";
-    gotoxy(WIN_WIDTH + 2, 14);
-    cout << "Right Ket";
+    gotoxy(WIN_WIDTH + 7, 2); cout << "Car simulation Game";
+    gotoxy(WIN_WIDTH + 6, 4); cout << "----------";
+    gotoxy(WIN_WIDTH + 6, 6); cout << "----------";
+    gotoxy(WIN_WIDTH + 7, 12); cout << "Control ";
+    gotoxy(WIN_WIDTH + 7, 13); cout << "-------- ";
+    gotoxy(WIN_WIDTH + 2, 14); cout << "A Key - Left";
+    gotoxy(WIN_WIDTH + 2, 15); cout << "D Key - Right";
 
-    gotoxy(18, 5);
-    cout << "Press any key to start";
+    gotoxy(18, 5); cout << "Press any key to start";
     getch();
-    gotoxy(18, 5);
-    cout << "                      ";
+    gotoxy(18, 5); cout << "                      ";
 
-    while(1){
-        if(kbhit()){
+    while (1) {
+        if (kbhit()) {
             char ch = getch();
-            if(ch == 'a' || ch == 'A' || ch == 75){  // 75 is the ASCII code of the left arrow
-                if(carpos > 18)  // Ensure the car does not go out of bounds on the left
+            if (ch == 'a' || ch == 'A' || ch == 75) {
+                if (carpos > 18)
                     carpos -= 4;
             }
-            if(ch == 'd' || ch == 'D' || ch == 77){  // 77 is the ASCII code of the right arrow
-                if(carpos < 50)  // Ensure the car does not go out of bounds on the right
+            if (ch == 'd' || ch == 'D' || ch == 77) {
+                if (carpos < 50)
                     carpos += 4;
             }
-            if(ch == 27){  // 27 is the ASCII code of the escape key
+            if (ch == 27) {
                 break;
             }
         }
@@ -250,81 +259,65 @@ void play(){
         drawCar();
         drawEnemy(0);
         drawEnemy(1);
-        if(collision() == 1){
+        if (collision() == 1) {
             gameover();
             return;
         }
-        Sleep(50);
+        Sleep(30);
         eraseCar();
         eraseEnemy(0);
         eraseEnemy(1);
 
-        if(enemyY[0] == 10)
-            if(enemyFlag[1] == 0)
+        if (enemyY[0] == 10)
+            if (enemyFlag[1] == 0)
                 enemyFlag[1] = 1;
 
-        if(enemyFlag[0] == 1)
+        if (enemyFlag[0] == 1)
             enemyY[0] += 1;
 
-        if(enemyFlag[1] == 1)
+        if (enemyFlag[1] == 1)
             enemyY[1] += 1;
 
-        if(enemyY[0] > SCREEN_HEIGHT - 4){
+        if (enemyY[0] > SCREEN_HEIGHT - 4) {
             resetEnemy(0);
             score++;
             updateScore();
         }
-        if(enemyY[1] > SCREEN_HEIGHT - 4){
+        if (enemyY[1] > SCREEN_HEIGHT - 4) {
             resetEnemy(1);
             score++;
             updateScore();
         }
     }
 }
-// Main function of the program
+
 int main() {
- // Hide the cursor (optional for visual clarity)
- setcursor(0, 0);
+    setcursor(0, 0);
+    srand((unsigned)time(NULL));
 
- // Seed the random number generator for unpredictable gameplay
- srand((unsigned)time(NULL));
+    do {
+        system("cls");
+        gotoxy(10, 5); cout << " -------------------------- ";
+        gotoxy(10, 6); cout << " |        Car simulation Game        | ";
+        gotoxy(10, 7); cout << " --------------------------";
+        gotoxy(10, 9); cout << "1. Start Game";
+        gotoxy(10, 10); cout << "2. Instructions";
+        gotoxy(10, 11); cout << "3. Top Scores";
+        gotoxy(10, 12); cout << "4. Quit";
+        gotoxy(10, 14); cout << "Select option: ";
+        char op = getche();
 
- // Main game loop
- do {
-   // Clear the screen and display the main menu
-   system("cls");
-   gotoxy(10, 5);
-   cout << " -------------------------- ";
-   gotoxy(10, 6);
- gotoxy(10,6); cout<<"  |    Simple Car Game   | ";
-   gotoxy(10, 7);
-   cout << " --------------------------";
-   gotoxy(10, 9);
-   cout << "1. Start Game";
-   gotoxy(10, 10);
-   cout << "2. Instructions";
-   gotoxy(10, 11);
-   cout << "3. Exit ";
-   gotoxy(10, 13);
-   cout << "Select option: ";
+        if (op == '1') {
+            play();
+        } else if (op == '2') {
+            instructions();
+        } else if (op == '3') {
+            displayTopScores();
+        } else if (op == '4') {
+            exit(0);
+        }
 
-   // Get player's menu choice
-   char op = getche();
+    } while (1);
 
-   // Process the chosen option
-   if (op == '1') {
-     // Start the game
-     play();
-   } else if (op == '2') {
-     // Display game instructions
-     instructions();
-   } else if (op == '3') {
-     // Exit the game
-     exit(0);
-   }
-
- } while (1);  // Repeat the menu loop indefinitely
-
- // Indicate successful program termination (not reached due to infinite loop)
- return 0;
+    return 0;
 }
